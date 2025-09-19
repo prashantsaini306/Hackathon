@@ -83,14 +83,7 @@ ax.set_title(f"Temperature directional vectors on {sel_date}", fontsize=14)
 
 st.pyplot(fig)
 
-        # Flow info
-        mean_dx = np.nanmean(dT_dlon)
-        mean_dy = np.nanmean(dT_dlat)
-        direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
-        mean_magnitude = np.nanmean(np.sqrt(dT_dlon**2 + dT_dlat**2))
-
-        st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
-        st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
+ 
 
     # ================= RAINFALL =================
     elif parameter == "Rainfall":
