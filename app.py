@@ -183,7 +183,7 @@ if uploaded_file:
         st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
 
 
-else uploaded_file:
+else :
     df = pd.read_csv(uploaded_file)
 
     # --- build datetime ---
