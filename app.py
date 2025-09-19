@@ -247,7 +247,7 @@ if uploaded_file:
             skip = (slice(None, None, 2), slice(None, None, 2))
             ax.quiver(
                 lon_2d[skip], lat_2d[skip], dP_dlon[skip], dP_dlat[skip],
-                color='black', angles='xy', scale_units='xy', scale=0.5, width=0.003, headwidth=3
+                color='black', angles='xy', scale_units='xy', scale=100
             )
             ax.set_xlabel("Longitude")
             ax.set_ylabel("Latitude")
