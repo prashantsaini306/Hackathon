@@ -187,7 +187,7 @@ else uploaded_file:
     df = pd.read_csv(uploaded_file)
 
     # --- build datetime ---
-    df = df.rename(columns={'Year':'year', 'Month':'month''})
+    df = df.rename(columns={'Year':'year', 'Month':'month'})
     df["datetime"] = pd.to_datetime(
         df['year'].astype(str) + '-' + df['month'].astype(str).astype(str)
     )
