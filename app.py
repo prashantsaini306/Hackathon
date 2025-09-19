@@ -194,10 +194,11 @@ if uploaded_file:
 
 
     elif parameter == "Pollutants 💨":
-        # --- build datetime ---
-        df = df.rename(columns={'Year':'year', 'Month':'month'})
+        # --- Build datetime for Year–Month only ---
+        df = df.rename(columns={'Year': 'year', 'Month': 'month'})
         df["datetime"] = pd.to_datetime(
-            df['year'].astype(str) + '-' + df['month'].astype(str)
+        df['year'].astype(str) + '-' + df['month'].astype(str),
+        format="%Y-%m"
         )
         # Separate uploader for pollutant data
         pollutant_file = st.file_uploader("Upload your PM2.5 CSV file:", type=["csv"], key="pollutant")
