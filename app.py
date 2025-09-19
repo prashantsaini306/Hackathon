@@ -263,19 +263,4 @@ if uploaded_file:
                 ax.set_title(f"PMI Gradient Directions on {time_vals[t_index].strftime('%Y-%m')}", fontsize=12)
             
                 st.pyplot(fig)
-            
-            # ----------------------------
-            # 3. Streamlit UI
-            # ----------------------------
-            st.title("📊 PMI Gradient Vector Viewer")
-            
-            csv_file = st.file_uploader("Upload PMI CSV file", type=["csv"])
-            if csv_file:
-                data_cube, time_vals, lat_vals, lon_vals = load_cube(csv_file)
-            
-                # Dropdown for time selection
-                time_choice = st.selectbox("Select month:", time_vals.strftime("%Y-%m"))
-                t_index = np.where(time_vals.strftime("%Y-%m") == time_choice)[0][0]
-            
-                # Plot
-                plot_pmi_gradient(data_cube, time_vals, lat_vals, lon_vals, t_index)
+                
