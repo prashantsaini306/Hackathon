@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import re
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 
 st.title("Weather Gradient Viewer")
 
@@ -56,15 +58,30 @@ if uploaded_file:
         # Gradient
         dT_dlat, dT_dlon = np.gradient(temp_2d, lat_vals, lon_vals)
 
-        # Plot
-        fig, ax = plt.subplots(figsize=(8,6))
-        pcm = ax.pcolormesh(lon_2d, lat_2d, temp_2d, shading='auto', cmap='coolwarm')
-        fig.colorbar(pcm, ax=ax, label='Temperature (°C)')
-        ax.quiver(lon_2d, lat_2d, dT_dlon, dT_dlat, scale=50, color='black')
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
-        ax.set_title(f"Temperature directional vectors on {sel_date}")
-        st.pyplot(fig)
+       # --- Plot with Cartopy ---
+proj = ccrs.PlateCarree()
+fig = plt.figure(figsize=(10,8))
+ax = plt.axes(projection=proj)
+
+ax.coastlines(resolution="10m", linewidth=1)
+ax.add_feature(cfeature.BORDERS, linestyle=":", linewidth=0.8)
+ax.add_feature(cfeature.LAND, facecolor="lightgray", alpha=0.5)
+ax.add_feature(cfeature.OCEAN, facecolor="lightblue", alpha=0.3)
+
+pcm = ax.pcolormesh(lon_2d, lat_2d, temp_2d,
+                    transform=ccrs.PlateCarree(),
+                    shading='auto', cmap='coolwarm')
+plt.colorbar(pcm, ax=ax, orientation="vertical", label="Temperature (°C)")
+
+ax.quiver(lon_2d, lat_2d, dT_dlon, dT_dlat,
+          transform=ccrs.PlateCarree(),
+          scale=50, color="black")
+
+# 🔹 Restrict to requested region
+ax.set_extent([70, 85, 28, 38], crs=ccrs.PlateCarree())
+ax.set_title(f"Temperature directional vectors on {sel_date}", fontsize=14)
+
+st.pyplot(fig)
 
         # Flow info
         mean_dx = np.nanmean(dT_dlon)
