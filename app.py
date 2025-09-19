@@ -184,4 +184,59 @@ if uploaded_file:
 
     # ================= POLLUTANTS =================
     elif parameter == "Pollutants 💨":
-        st.info("Pollutant data visualization will appear here.")
+        # Build the data cube (time × lat × lon)
+        def build_data_cube(df):
+            lat_vals = sorted(df['lat'].unique())
+            lon_vals = sorted(df['lon'].unique())
+            time_vals = pd.to_datetime(df.columns[2:], format="%Y-%m")  # assumes YYYY-MM headers
+
+            ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
+            data_cube = np.full((ntime, nlat, nlon), np.nan)
+
+            lat_index = {lat: i for i, lat in enumerate(lat_vals)}
+            lon_index = {lon: j for j, lon in enumerate(lon_vals)}
+
+            for _, row in df.iterrows():
+                i = lat_index[row['lat']]
+                j = lon_index[row['lon']]
+                data_cube[:, i, j] = row.values[2:]
+
+            return data_cube, time_vals, lat_vals, lon_vals
+
+        # Expect uploaded CSV to have columns: lat, lon, YYYY-MM...
+        st.write("Preview of uploaded PM2.5 data:", df.head())
+
+        # Build cube and axes
+        data_cube, time_vals, lat_vals, lon_vals = build_data_cube(df)
+
+        # Date selector
+        sel_date = st.selectbox(
+            "Select a date (YYYY-MM)",
+            [t.strftime("%Y-%m") for t in time_vals]
+        )
+        t_index = [i for i, t in enumerate(time_vals) if t.strftime("%Y-%m") == sel_date][0]
+
+        pm_field = data_cube[t_index, :, :]
+        lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals, indexing="xy")
+
+        # Compute gradients
+        dP_dlat, dP_dlon = np.gradient(pm_field, lat_vals, lon_vals)
+
+        # Plot
+        fig, ax = plt.subplots(figsize=(8,6))
+        pcm = ax.pcolormesh(lon_2d, lat_2d, pm_field, shading='auto', cmap='coolwarm')
+        fig.colorbar(pcm, ax=ax, label='PM2.5 (µg/m³)')
+        ax.quiver(lon_2d, lat_2d, dP_dlon, dP_dlat, color='black', scale=50)
+        ax.set_xlabel("Longitude")
+        ax.set_ylabel("Latitude")
+        ax.set_title(f"PM2.5 directional vectors on {sel_date}")
+        st.pyplot(fig)
+
+        # Flow info
+        mean_dx = np.nanmean(dP_dlon)
+        mean_dy = np.nanmean(dP_dlat)
+        direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
+        mean_magnitude = np.nanmean(np.sqrt(dP_dlon**2 + dP_dlat**2))
+
+        st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
+        st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
