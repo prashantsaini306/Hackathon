@@ -88,38 +88,45 @@ if uploaded_file:
 
         ntime = len(df)
         nlat, nlon = len(lat_vals), len(lon_vals)
-
-        # --- Create data cube (time × lat × lon) ---
         data_cube = np.full((ntime, nlat, nlon), np.nan)
 
-        # --- Fill the cube ---
+        # --- Fill cube ---
         for c in prec_columns:
             lat_raw, lon_raw = c.split("_")[1:]
             lat_val = float(lat_raw)/100 if len(lat_raw) > 2 else float(lat_raw)
             lon_val = float(lon_raw)/100 if len(lon_raw) > 2 else float(lon_raw)
-
             i = lat_vals.index(lat_val)
             j = lon_vals.index(lon_val)
             data_cube[:, i, j] = df[c].values
 
-        # --- Date selector in Streamlit ---
+        # --- Date selector ---
         sel_date = st.selectbox("Select a date", df["datetime"].dt.strftime("%Y-%m-%d").unique())
-        t_idx = df.index[df["datetime"].dt.strftime("%Y-%m-%d") == sel_date][0]
-
-        # --- Extract 2D rainfall slice ---
+        t_idx = df.index[df["datetime"] == sel_date][0]
         prec_2d = data_cube[t_idx, :, :]
+
         lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals)
 
-        # --- Show rainfall map ---
-        import matplotlib.pyplot as plt
+        # --- Gradient ---
+        dP_dlat, dP_dlon = np.gradient(prec_2d, lat_vals, lon_vals)
 
-        fig, ax = plt.subplots(figsize=(6,5))
+        # --- Plot rainfall map + directional vectors ---
+        fig, ax = plt.subplots(figsize=(8,6))
         pcm = ax.pcolormesh(lon_2d, lat_2d, prec_2d, shading='auto', cmap='Blues')
-        fig.colorbar(pcm, ax=ax, label="Rainfall (mm)")
+        fig.colorbar(pcm, ax=ax, label='Rainfall (mm)')
+        ax.quiver(lon_2d, lat_2d, dP_dlon, dP_dlat, scale=50, color='black')
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
-        ax.set_title(f"Rainfall on {sel_date}")
+        ax.set_title(f"Rainfall directional vectors on {sel_date}")
         st.pyplot(fig)
+
+        # --- Flow info ---
+        mean_dx = np.nanmean(dP_dlon)
+        mean_dy = np.nanmean(dP_dlat)
+        direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
+        mean_magnitude = np.nanmean(np.sqrt(dP_dlon**2 + dP_dlat**2))
+
+        st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
+        st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
         
 
     # ================= WIND SPEED =================
