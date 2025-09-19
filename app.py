@@ -9,7 +9,7 @@ st.title("Weather Gradient Viewer")
 # ---- Dropdown menu ----
 parameter = st.selectbox(
     "Select a parameter to analyze:",
-    ["Temperature", "Rainfall :cloud_with_rain:", "Wind Speed", "Pollutants"]
+    ["Temperature 🌡️", "Rainfall 🌧️", "Wind Speed 🌬️", "Pollutants 💨"]
 )
 
 # ---- File Upload ----
