@@ -232,12 +232,13 @@ if uploaded_file:
         # --- Compute gradients ---
             dP_dlat, dP_dlon = np.gradient(pm_field, lat_vals, lon_vals)
 
-            # Diagnostics
-            st.write(
-                "PM2.5 field min/max:", np.nanmin(pm_field), np.nanmax(pm_field),
-                " | Gradient min/max:", np.nanmin(dP_dlat), np.nanmax(dP_dlat),
-                np.nanmin(dP_dlon), np.nanmax(dP_dlon)
+            grad_mag = np.sqrt(dP_dlat**2 + dP_dlon**2)
+            scale_factor = 1 / np.nanmax(grad_mag) if np.nanmax(grad_mag) != 0 else 1
+            ax.quiver(
+                lon_2d, lat_2d, dP_dlon*scale_factor, dP_dlat*scale_factor,
+                color='black', scale=1
             )
+
 
         # --- Plot PM2.5 heatmap with directional vectors ---
             fig, ax = plt.subplots(figsize=(8,6))
