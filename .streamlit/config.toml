@@ -1,11 +1,5 @@
 [server]
 maxUploadSize = 1000  # Set to 500 MB (or any value ≤1024)
 
-[theme]
-base="light"
-primaryColor="#d17c46"                # warm accent (you can change)
-backgroundColor="#fff8e7"             # creamy background
-secondaryBackgroundColor="#f5e6cc"    # slightly darker cream
-textColor="#3b2f2f"                   # dark brown text
 
 
