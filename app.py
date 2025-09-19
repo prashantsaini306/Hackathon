@@ -183,21 +183,12 @@ if uploaded_file:
         st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
 
 
-else :
-    df = pd.read_csv(uploaded_file)
-
-    # --- build datetime ---
-    df = df.rename(columns={'Year':'year', 'Month':'month'})
-    df["datetime"] = pd.to_datetime(
-        df['year'].astype(str) + '-' + df['month'].astype(str).astype(str)
-    )
-    # ================= POLLUTANTS =================
-    if parameter == "Pollutants 💨":
+    elif parameter == "Pollutants 💨":
         # Build the data cube (time × lat × lon)
         def build_data_cube(df):
             lat_vals = sorted(df['lat'].unique())
             lon_vals = sorted(df['lon'].unique())
-            time_vals = pd.to_datetime(df.columns[2:], format="%Y-%m")  # assumes YYYY-MM headers
+            time_vals = pd.to_datetime(df.columns[2:], format="%Y-%m-%d")  # assumes YYYY-MM headers
 
             ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
             data_cube = np.full((ntime, nlat, nlon), np.nan)
@@ -223,7 +214,7 @@ else :
             "Select a date (YYYY-MM)",
             [t.strftime("%Y-%m") for t in time_vals]
         )
-        t_index = [i for i, t in enumerate(time_vals) if t.strftime("%Y-%m") == sel_date][0]
+        t_index = [i for i, t in enumerate(time_vals) if t.strftime("%Y-%m-%d") == sel_date][0]
 
         pm_field = data_cube[t_index, :, :]
         lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals, indexing="xy")
