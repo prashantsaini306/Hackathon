@@ -163,10 +163,10 @@ if uploaded_file:
             j = lon_vals.index(lon_val)
             data_cube[:, i, j] = df[c].values
 
-        # --- Date selector ---
-        sel_date = st.selectbox("Select a date", df["datetime"].dt.strftime("%Y-%m").unique())
+        # Date selector
+        sel_date = st.selectbox("Select a date", df["datetime"].dt.strftime("%Y-%m-%d").unique())
         t_idx = df.index[df["datetime"] == sel_date][0]
-        wind_2d = data_cube[t_idx, :, :]
+        temp_2d = data_cube[t_idx, :, :]
 
         lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals)
 
