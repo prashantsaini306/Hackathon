@@ -182,6 +182,15 @@ if uploaded_file:
         st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
         st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
 
+
+else uploaded_file:
+    df = pd.read_csv(uploaded_file)
+
+    # --- build datetime ---
+    df = df.rename(columns={'Year':'year', 'Month':'month''})
+    df["datetime"] = pd.to_datetime(
+        df['year'].astype(str) + '-' + df['month'].astype(str).astype(str)
+    )
     # ================= POLLUTANTS =================
     elif parameter == "Pollutants 💨":
         # Build the data cube (time × lat × lon)
