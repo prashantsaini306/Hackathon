@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import re
 
 # =============== LOAD DATA =================
-st.title("Temperature Gradient Viewer")
+st.title("Waether Gradient Viewer")
 
 uploaded_file = st.file_uploader("Upload your CSV (Data1.csv)", type=["csv"])
 if uploaded_file:
