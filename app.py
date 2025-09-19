@@ -64,7 +64,7 @@ if uploaded_file:
         ax.quiver(lon_2d, lat_2d, dT_dlon, dT_dlat, scale=50, color='black')
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
-        ax.set_title(f"Temperature directional vectors on {sel_date}")
+        ax.set_title(f"Temperature 🌡️ directional vectors on {sel_date}")
         st.pyplot(fig)
 
         # Flow info
@@ -117,7 +117,7 @@ if uploaded_file:
         ax.quiver(lon_2d, lat_2d, dP_dlon, dP_dlat, scale=50, color='black')
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
-        ax.set_title(f"Rainfall directional vectors on {sel_date}")
+        ax.set_title(f"Rainfall 🌧️ directional vectors on {sel_date}")
         st.pyplot(fig)
 
         # --- Flow info ---
@@ -171,7 +171,7 @@ if uploaded_file:
         ax.quiver(lon_2d, lat_2d, dW_dlon, dW_dlat, scale=50, color='black')
         ax.set_xlabel("Longitude")
         ax.set_ylabel("Latitude")
-        ax.set_title(f"Wind speed directional vectors on {sel_date}")
+        ax.set_title(f"Wind speed 🌬️ directional vectors on {sel_date}")
         st.pyplot(fig)
 
         # --- Flow info ---
