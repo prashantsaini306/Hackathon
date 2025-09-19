@@ -1,14 +1,13 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
-
-# Increase upload limit to 1 GB (or any value in MB)
-st.set_option("server.maxUploadSize", 300)  
+import matplotlib.pyplot as plt 
 
 
 st.title("Weather Vectors: From Scalars to Directional Insights")
 st.write("Upload a CSV of gridded temperature data to compute and visualize directional vectors.")
 
+# Increase upload limit to 1 GB (or any value in MB)
+st.set_option("server.maxUploadSize", 300) 
 uploaded_file = st.file_uploader("Upload temperature CSV", type=["csv"])
 
 if uploaded_file:
