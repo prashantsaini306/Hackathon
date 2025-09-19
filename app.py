@@ -75,6 +75,54 @@ if uploaded_file:
         st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
         st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
 
+        # ==========================================================
+        # 🔎 Extra ANALYSIS SECTION
+        # ==========================================================
+
+        # --- 1. Statistical summary ---
+        temp_values = temp_2d.flatten()
+        temp_values = temp_values[~np.isnan(temp_values)]
+        summary = {
+            "Mean (°C)": np.mean(temp_values),
+            "Median (°C)": np.median(temp_values),
+            "Min (°C)": np.min(temp_values),
+            "Max (°C)": np.max(temp_values),
+            "Std Dev (°C)": np.std(temp_values),
+        }
+        st.write("### 📊 Statistical Summary")
+        st.table(pd.DataFrame(summary, index=["Statistics"]))
+
+        # --- 2. Distribution Histogram ---
+        fig, ax = plt.subplots()
+        ax.hist(temp_values, bins=20, color="tomato", edgecolor="black", alpha=0.7)
+        ax.set_xlabel("Temperature (°C)")
+        ax.set_ylabel("Frequency")
+        ax.set_title("Temperature Distribution")
+        st.pyplot(fig)
+
+        # --- 3. Time-series Trend of Mean Temperature ---
+        mean_temp_series = np.nanmean(data_cube, axis=(1,2))  # avg over lat/lon
+        time_vals = df["datetime"].unique()
+
+        fig, ax = plt.subplots()
+        ax.plot(time_vals, mean_temp_series, color="darkred")
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Mean Temperature (°C)")
+        ax.set_title("Mean Temperature Trend Over Time")
+        plt.xticks(rotation=45)
+        st.pyplot(fig)
+
+        # --- 4. Monthly Cycle ---
+        df["month"] = df["datetime"].dt.month
+        monthly_mean = df.groupby("month")[t2m_columns].mean().mean(axis=1)
+
+        fig, ax = plt.subplots()
+        monthly_mean.plot(kind="bar", ax=ax, color="salmon")
+        ax.set_xlabel("Month")
+        ax.set_ylabel("Avg Temperature (°C)")
+        ax.set_title("Monthly Temperature Cycle")
+        st.pyplot(fig)
+
         
     # ================= RAINFALL =================
     elif parameter == "Rainfall 🌧️":
