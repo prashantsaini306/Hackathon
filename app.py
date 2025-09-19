@@ -253,6 +253,4 @@ if uploaded_file:
     
             st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
             st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
-        else:
-            st.info("Please upload a PM2.5 dataset to continue.")
 
