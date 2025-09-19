@@ -26,7 +26,7 @@ if uploaded_file:
             df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str)
         )
         # --- Extract T2M_<lat>_<lon> columns ---
-        t2m_columns = [c for c in df.columns if re.match(r"WS10M_\d+_\d+$", c)]
+        t2m_columns = [c for c in df.columns if re.match(r"T2M_\d+_\d+$", c)]
 
         lat_vals = sorted({int(c.split("_")[1])/100 if len(c.split("_")[1]) > 2 else int(c.split("_")[1])
                            for c in t2m_columns})
