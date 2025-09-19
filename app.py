@@ -24,7 +24,7 @@ if uploaded_file:
     )
 
     # ================= TEMPERATURE =================
-    if parameter == "Temperature":
+    if parameter == "Temperature 🌡️":
         # --- Extract T2M_<lat>_<lon> columns ---
         t2m_columns = [c for c in df.columns if re.match(r"WS10M_\d+_\d+$", c)]
 
@@ -77,7 +77,7 @@ if uploaded_file:
 
         
     # ================= RAINFALL =================
-    elif parameter == "Rainfall":
+    elif parameter == "Rainfall 🌧️":
         # --- Extract Prec_<lat>_<lon> columns ---
         prec_columns = [c for c in df.columns if re.match(r"Prec_\d+_\d+$", c)]
 
@@ -131,7 +131,7 @@ if uploaded_file:
         
 
     # ================= WIND SPEED =================
-    elif parameter == "Wind Speed":
+    elif parameter == "Wind Speed 🌬️":
         # --- Extract WS10M_<lat>_<lon> columns ---
         wind_columns = [c for c in df.columns if re.match(r"WS10M_\d+_\d+$", c)]
 
@@ -184,5 +184,5 @@ if uploaded_file:
         st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
 
     # ================= POLLUTANTS =================
-    elif parameter == "Pollutants":
+    elif parameter == "Pollutants 💨":
         st.info("Pollutant data visualization will appear here.")
