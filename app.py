@@ -194,25 +194,26 @@ if uploaded_file:
 
 
     elif parameter == "Pollutants 💨":
-        # --- Build datetime for Year–Month only ---
-        df = df.rename(columns={'Year': 'year', 'Month': 'month'})
-        df["datetime"] = pd.to_datetime(
-        df['year'].astype(str) + '-' + df['month'].astype(str),
-        format="%Y-%m"
-        )
-        # Separate uploader for pollutant data
+        # --- Separate uploader just for pollutant data ---
         pollutant_file = st.file_uploader("Upload your PM2.5 CSV file:", type=["csv"], key="pollutant")
+
         if pollutant_file:
             df_pm = pd.read_csv(pollutant_file)
 
-            # Expect columns: lat, lon, YYYY-MM ...
+        # Expect columns: lat, lon, YYYY-MM ...
             st.write("Preview of uploaded PM2.5 data:", df_pm.head())
 
-            # --- Build the data cube ---
+        # --- Extract available year-month columns from headers ---
+            year_month_cols = df_pm.columns[2:]
+
+        # --- Dropdown menu for selecting a date ---
+            sel_date = st.selectbox("Select Year-Month", year_month_cols)
+            st.write(f"You selected: **{sel_date}**")
+
+        # --- Build data cube (time × lat × lon) ---
             def build_pm25_cube(df_pm):
                 lat_vals = sorted(df_pm['lat'].unique())
                 lon_vals = sorted(df_pm['lon'].unique())
-                # Use year–month format
                 time_vals = pd.to_datetime(df_pm.columns[2:], format="%Y-%m")
 
                 ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
@@ -230,21 +231,16 @@ if uploaded_file:
 
             data_cube, time_vals, lat_vals, lon_vals = build_pm25_cube(df_pm)
 
-            # Date selector
-            sel_date = st.selectbox(
-                "Select a date (YYYY-MM)",
-                [t.strftime("%Y-%m") for t in time_vals]
-            )    
-            # Find index for the chosen date
+        # --- Find index for selected date ---
             t_index = [i for i, t in enumerate(time_vals) if t.strftime("%Y-%m") == sel_date][0]
 
             pm_field = data_cube[t_index, :, :]
             lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals, indexing="xy")
 
-            # Compute gradients
+        # --- Compute gradients ---
             dP_dlat, dP_dlon = np.gradient(pm_field, lat_vals, lon_vals)
 
-            # --- Plot PM2.5 heatmap with directional vectors ---
+        # --- Plot PM2.5 heatmap with directional vectors ---
             fig, ax = plt.subplots(figsize=(8,6))
             pcm = ax.pcolormesh(lon_2d, lat_2d, pm_field, shading='auto', cmap='coolwarm')
             fig.colorbar(pcm, ax=ax, label='PM2.5 (µg/m³)')
@@ -259,7 +255,7 @@ if uploaded_file:
             mean_dy = np.nanmean(dP_dlat)
             direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
             mean_magnitude = np.nanmean(np.sqrt(dP_dlon**2 + dP_dlat**2))
-
+    
             st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
             st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
         else:
