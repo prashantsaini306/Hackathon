@@ -77,7 +77,59 @@ if uploaded_file:
 
     # ================= RAINFALL =================
     elif parameter == "Rainfall":
-        st.info("Rainfall visualization will appear here.")
+       # --- Extract Prec_<lat>_<lon> columns ---
+       prec_columns = [c for c in df.columns if re.match(r"Prec_\d+_\d+$", c)]
+
+       # --- Get unique lat/lon values ---
+       lat_vals = sorted({int(c.split("_")[1])/100 if len(c.split("_")[1]) > 2 else int(c.split("_")[1])
+                       for c in prec_columns})
+       lon_vals = sorted({int(c.split("_")[2])/100 if len(c.split("_")[2]) > 2 else int(c.split("_")[2])
+                       for c in prec_columns})
+
+       ntime = len(df)
+       nlat, nlon = len(lat_vals), len(lon_vals)
+
+       # --- Create data cube (time × lat × lon) ---
+       data_cube = np.full((ntime, nlat, nlon), np.nan)
+
+       # --- Fill the cube ---
+       for c in prec_columns:
+           lat_raw, lon_raw = c.split("_")[1:]
+           lat_val = float(lat_raw)/100 if len(lat_raw) > 2 else float(lat_raw)
+           lon_val = float(lon_raw)/100 if len(lon_raw) > 2 else float(lon_raw)
+
+           i = lat_vals.index(lat_val)
+           j = lon_vals.index(lon_val)
+           data_cube[:, i, j] = df[c].values
+
+       # --- Date selector in Streamlit ---
+       sel_date = st.selectbox("Select a date", df["datetime"].dt.strftime("%Y-%m-%d").unique())
+       t_idx = df.index[df["datetime"].dt.strftime("%Y-%m-%d") == sel_date][0]
+
+       # --- Extract 2D rainfall slice ---
+       prec_2d = data_cube[t_idx, :, :]
+       lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals)
+
+       # --- Show rainfall map ---
+       import matplotlib.pyplot as plt
+
+       fig, ax = plt.subplots(figsize=(6,5))
+       pcm = ax.pcolormesh(lon_2d, lat_2d, prec_2d, shading='auto', cmap='Blues')
+       fig.colorbar(pcm, ax=ax, label="Rainfall (mm)")
+       ax.set_xlabel("Longitude")
+       ax.set_ylabel("Latitude")
+       ax.set_title(f"Rainfall on {sel_date}")
+       st.pyplot(fig)
+
+       # Flow info
+       mean_dx = np.nanmean(dT_dlon)
+       mean_dy = np.nanmean(dT_dlat)
+       direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
+       mean_magnitude = np.nanmean(np.sqrt(dT_dlon**2 + dT_dlat**2))
+
+       st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
+       st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
+
 
     # ================= WIND SPEED =================
     elif parameter == "Wind Speed":
