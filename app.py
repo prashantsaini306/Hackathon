@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import re
 
-st.title("Weather Gradient Viewer")
+st.title("Weather Gradient Tracker")
 
 # ---- Dropdown menu ----
 parameter = st.selectbox(
