@@ -173,15 +173,6 @@ if uploaded_file:
         ax.set_title(f"Wind speed directional vectors on {sel_date}")
         st.pyplot(fig)
 
-        # --- Flow info ---
-        mean_dx = np.nanmean(dW_dlon)
-        mean_dy = np.nanmean(dW_dlat)
-        direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
-        mean_magnitude = np.nanmean(np.sqrt(dW_dlon**2 + dW_dlat**2))
-
-        st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
-        st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
-
     # ================= POLLUTANTS =================
     elif parameter == "Pollutants":
         st.info("Pollutant data visualization will appear here.")
