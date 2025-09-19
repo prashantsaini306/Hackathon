@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import re
 
-# =============== TITLE =================
 st.title("Weather Gradient Viewer")
 
 # ---- Dropdown menu ----
@@ -24,6 +23,7 @@ if uploaded_file:
         df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str)
     )
 
+    # ================= TEMPERATURE =================
     if parameter == "Temperature":
         # --- Extract T2M_<lat>_<lon> columns ---
         t2m_columns = [c for c in df.columns if re.match(r"T2M_\d+_\d+$", c)]
@@ -46,20 +46,17 @@ if uploaded_file:
             j = lon_vals.index(lon_val)
             data_cube[:, i, j] = df[c].values
 
-        # =============== INTERACT =================
         # Date selector
         sel_date = st.selectbox("Select a date", df["datetime"].dt.strftime("%Y-%m-%d").unique())
-
-        # Get 2D slice for chosen date
         t_idx = df.index[df["datetime"] == sel_date][0]
         temp_2d = data_cube[t_idx, :, :]
 
         lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals)
 
-        # Compute gradient
+        # Gradient
         dT_dlat, dT_dlon = np.gradient(temp_2d, lat_vals, lon_vals)
 
-        # =============== PLOT =================
+        # Plot
         fig, ax = plt.subplots(figsize=(8,6))
         pcm = ax.pcolormesh(lon_2d, lat_2d, temp_2d, shading='auto', cmap='coolwarm')
         fig.colorbar(pcm, ax=ax, label='Temperature (°C)')
@@ -69,7 +66,7 @@ if uploaded_file:
         ax.set_title(f"Temperature directional vectors on {sel_date}")
         st.pyplot(fig)
 
-        # Show average flow info
+        # Flow info
         mean_dx = np.nanmean(dT_dlon)
         mean_dy = np.nanmean(dT_dlat)
         direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
@@ -78,11 +75,14 @@ if uploaded_file:
         st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
         st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
 
+    # ================= RAINFALL =================
     elif parameter == "Rainfall":
-        st.info("Rainfall visualization will appear here (to be implemented).")
+        st.info("Rainfall visualization will appear here.")
 
+    # ================= WIND SPEED =================
     elif parameter == "Wind Speed":
-        st.info("Wind speed visualization will appear here (to be implemented).")
+        st.info("Wind speed visualization will appear here.")
 
+    # ================= POLLUTANTS =================
     elif parameter == "Pollutants":
-        st.info("Pollutant data visualization will appear here (to be implemented).")
+        st.info("Pollutant data visualization will appear here.")
