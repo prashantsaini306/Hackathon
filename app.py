@@ -171,11 +171,11 @@ if uploaded_file:
         lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals)
 
         # --- Gradient (to show directional changes in speed) ---
-        dW_dlat, dW_dlon = np.gradient(wind_2d, lat_vals, lon_vals)
+        dW_dlat, dW_dlon = np.gradient(temp_2d, lat_vals, lon_vals)
 
         # --- Plot wind speed map + gradient arrows ---
         fig, ax = plt.subplots(figsize=(8,6))
-        pcm = ax.pcolormesh(lon_2d, lat_2d, wind_2d, shading='auto', cmap='viridis')
+        pcm = ax.pcolormesh(lon_2d, lat_2d, temp_2d, shading='auto', cmap='viridis')
         fig.colorbar(pcm, ax=ax, label='Wind Speed (m/s)')
         ax.quiver(lon_2d, lat_2d, dW_dlon, dW_dlat, scale=50, color='black')
         ax.set_xlabel("Longitude")
