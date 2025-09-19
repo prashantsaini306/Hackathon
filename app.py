@@ -12,7 +12,6 @@ parameter = st.selectbox(
     ["Temperature 🌡️", "Rainfall 🌧️", "Wind Speed 🌬️", "Pollutants 💨"]
 )
 
-
 # ---- File Upload ----
 uploaded_file = st.file_uploader("Please upload your dataset with one of the above parameter it contains :", type=["csv"])
 if uploaded_file:
