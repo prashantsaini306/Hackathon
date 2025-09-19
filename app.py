@@ -194,11 +194,6 @@ if uploaded_file:
 
 
     elif parameter == "Pollutants 💨":
-        # --- Separate uploader just for pollutant data ---
-        pollutant_file = st.file_uploader("Upload your PM2.5 CSV file:", type=["csv"], key="pollutant")
-
-        if pollutant_file:
-            df_pm = pd.read_csv(pollutant_file)
 
         # Expect columns: lat, lon, YYYY-MM ...
             st.write("Preview of uploaded PM2.5 data:", df_pm.head())
