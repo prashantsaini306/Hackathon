@@ -195,98 +195,87 @@ if uploaded_file:
 
     elif parameter == "Pollutants 💨":
 
-       # streamlit_app.py
-        import streamlit as st
-        import numpy as np
-        import pandas as pd
-        import matplotlib.pyplot as plt
-        import cartopy.crs as ccrs
-        import cartopy.feature as cfeature
-
-        # ----------------------------
-        # 1. Load your CSV and build cube
-        # ----------------------------
-        @st.cache_data
-        def load_cube(csv_path):
-            df = pd.read_csv(csv_path)
-
-            # --- Build data cube ---
-            lat_vals = sorted(df['lat'].unique())
-            lon_vals = sorted(df['lon'].unique())
-            time_vals = pd.to_datetime(df.columns[2:], format="%Y-%m")  # adapt if needed
-        
-            ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
-            data_cube = np.full((ntime, nlat, nlon), np.nan)
-        
-            lat_index = {lat: i for i, lat in enumerate(lat_vals)}
-            lon_index = {lon: j for j, lon in enumerate(lon_vals)}
-        
-            for _, row in df.iterrows():
-                i = lat_index[row['lat']]
-                j = lon_index[row['lon']]
-                data_cube[:, i, j] = row.values[2:]
-
-            return data_cube, time_vals, lat_vals, lon_vals
-
-        # ----------------------------
-        # 2. Gradient plotting function
-        # ----------------------------
-        def plot_pmi_gradient(data_cube, time_vals, lat_vals, lon_vals, t_index,
-                              extent=[72,82,28,38], cmap="coolwarm"):
-            field = data_cube[t_index, :, :]
-            lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals, indexing="xy")
-        
-            # Gradients
-            dT_dlat, dT_dlon = np.gradient(field, lat_vals, lon_vals)
-        
-            # Normalize to unit length
-            mag = np.sqrt(dT_dlon**2 + dT_dlat**2)
-            mag[mag == 0] = 1.0
-            u = dT_dlon / mag
-            v = dT_dlat / mag
-        
-            # Rescale to visible arrows
-            dx = np.median(np.diff(lon_vals))
-            dy = np.median(np.diff(lat_vals))
-            arrow_len = 0.5 * min(dx, dy)
-            u *= arrow_len
-            v *= arrow_len
-        
-            # Plot
-            proj = ccrs.PlateCarree()
-            fig, ax = plt.subplots(figsize=(8,6), subplot_kw={'projection': proj})
-        
-            ax.coastlines(resolution="10m", linewidth=1)
-            ax.add_feature(cfeature.BORDERS, linestyle=":", linewidth=0.8)
-            ax.add_feature(cfeature.LAND, facecolor="lightgray", alpha=0.5)
-        
-            pcm = ax.pcolormesh(lon_2d, lat_2d, field,
-                                transform=ccrs.PlateCarree(),
-                                shading='auto', cmap=cmap)
-            plt.colorbar(pcm, ax=ax, label="PMI")
-        
-            ax.quiver(lon_2d, lat_2d, u, v,
-                      transform=ccrs.PlateCarree(),
-                      scale=1, color="black", width=0.002)
-        
-            ax.set_extent(extent, crs=ccrs.PlateCarree())
-            ax.set_title(f"PMI Gradient Directions on {time_vals[t_index].strftime('%Y-%m')}", fontsize=12)
-            st.pyplot(fig)
-        
-        # ----------------------------
-        # 3. Streamlit UI
-        # ----------------------------
-        st.title("PMI Gradient Vector Viewer")
-        
-        # Upload CSV
-        csv_file = st.file_uploader("Upload PMI CSV file", type=["csv"])
-        if csv_file:
-            data_cube, time_vals, lat_vals, lon_vals = load_cube(csv_file)
-        
-            # Dropdown for time selection
-            time_choice = st.selectbox("Select month:", time_vals.strftime("%Y-%m"))
-            t_index = np.where(time_vals.strftime("%Y-%m") == time_choice)[0][0]
-        
-            # Plot
-            plot_pmi_gradient(data_cube, time_vals, lat_vals, lon_vals, t_index)
-
+        # app.py
+            import streamlit as st
+            import numpy as np
+            import pandas as pd
+            import matplotlib.pyplot as plt
+            
+            # ----------------------------
+            # 1. Load CSV and build cube
+            # ----------------------------
+            @st.cache_data
+            def load_cube(csv_file):
+                df = pd.read_csv(csv_file)
+            
+                lat_vals = sorted(df['lat'].unique())
+                lon_vals = sorted(df['lon'].unique())
+            
+                # Convert "YYYY-MM" style columns to datetime
+                time_vals = pd.to_datetime(df.columns[2:], format="%Y-%m")
+            
+                ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
+                data_cube = np.full((ntime, nlat, nlon), np.nan)
+            
+                lat_index = {lat: i for i, lat in enumerate(lat_vals)}
+                lon_index = {lon: j for j, lon in enumerate(lon_vals)}
+            
+                for _, row in df.iterrows():
+                    i = lat_index[row['lat']]
+                    j = lon_index[row['lon']]
+                    data_cube[:, i, j] = row.values[2:]
+            
+                return data_cube, time_vals, lat_vals, lon_vals
+            
+            # ----------------------------
+            # 2. Plot gradient vectors
+            # ----------------------------
+            def plot_pmi_gradient(data_cube, time_vals, lat_vals, lon_vals, t_index, cmap="coolwarm"):
+                field = data_cube[t_index, :, :]
+            
+                lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals, indexing="xy")
+            
+                # Compute gradients
+                dT_dlat, dT_dlon = np.gradient(field, lat_vals, lon_vals)
+            
+                # Normalize (unit vectors)
+                mag = np.sqrt(dT_dlon**2 + dT_dlat**2)
+                mag[mag == 0] = 1.0
+                u = dT_dlon / mag
+                v = dT_dlat / mag
+            
+                # Scale arrows to grid cell size
+                dx = np.median(np.diff(lon_vals))
+                dy = np.median(np.diff(lat_vals))
+                arrow_len = 0.5 * min(dx, dy)
+                u *= arrow_len
+                v *= arrow_len
+            
+                # Plot
+                fig, ax = plt.subplots(figsize=(8,6))
+                pcm = ax.pcolormesh(lon_2d, lat_2d, field, shading="auto", cmap=cmap)
+                plt.colorbar(pcm, ax=ax, label="PMI")
+            
+                ax.quiver(lon_2d, lat_2d, u, v, scale=1, color="black", width=0.002)
+            
+                ax.set_xlabel("Longitude")
+                ax.set_ylabel("Latitude")
+                ax.set_title(f"PMI Gradient Directions on {time_vals[t_index].strftime('%Y-%m')}", fontsize=12)
+            
+                st.pyplot(fig)
+            
+            # ----------------------------
+            # 3. Streamlit UI
+            # ----------------------------
+            st.title("📊 PMI Gradient Vector Viewer")
+            
+            csv_file = st.file_uploader("Upload PMI CSV file", type=["csv"])
+            if csv_file:
+                data_cube, time_vals, lat_vals, lon_vals = load_cube(csv_file)
+            
+                # Dropdown for time selection
+                time_choice = st.selectbox("Select month:", time_vals.strftime("%Y-%m"))
+                t_index = np.where(time_vals.strftime("%Y-%m") == time_choice)[0][0]
+            
+                # Plot
+                plot_pmi_gradient(data_cube, time_vals, lat_vals, lon_vals, t_index)
