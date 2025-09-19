@@ -17,14 +17,14 @@ uploaded_file = st.file_uploader("Upload your CSV file here:", type=["csv"])
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
 
-    # --- build datetime ---
-    df = df.rename(columns={'Year':'year', 'Month':'month', 'Date':'day'})
-    df["datetime"] = pd.to_datetime(
-        df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str)
-    )
-
     # ================= TEMPERATURE =================
     if parameter == "Temperature 🌡️":
+
+        # --- build datetime ---
+        df = df.rename(columns={'Year':'year', 'Month':'month', 'Date':'day'})
+        df["datetime"] = pd.to_datetime(
+            df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str)
+        )
         # --- Extract T2M_<lat>_<lon> columns ---
         t2m_columns = [c for c in df.columns if re.match(r"WS10M_\d+_\d+$", c)]
 
@@ -77,6 +77,11 @@ if uploaded_file:
         
     # ================= RAINFALL =================
     elif parameter == "Rainfall 🌧️":
+        # --- build datetime ---
+        df = df.rename(columns={'Year':'year', 'Month':'month', 'Date':'day'})
+        df["datetime"] = pd.to_datetime(
+            df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str)
+        )
         # --- Extract Prec_<lat>_<lon> columns ---
         prec_columns = [c for c in df.columns if re.match(r"Prec_\d+_\d+$", c)]
 
@@ -131,6 +136,11 @@ if uploaded_file:
 
     # ================= WIND SPEED =================
     elif parameter == "Wind Speed 🌬️":
+        # --- build datetime ---
+        df = df.rename(columns={'Year':'year', 'Month':'month', 'Date':'day'})
+        df["datetime"] = pd.to_datetime(
+            df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str)
+        )
         # --- Extract WS10M_<lat>_<lon> columns ---
         wind_columns = [c for c in df.columns if re.match(r"WS10M_\d+_\d+$", c)]
 
@@ -184,6 +194,11 @@ if uploaded_file:
 
 
     elif parameter == "Pollutants 💨":
+        # --- build datetime ---
+        df = df.rename(columns={'Year':'year', 'Month':'month'})
+        df["datetime"] = pd.to_datetime(
+            df['year'].astype(str) + '-' + df['month'].astype(str)
+        )
         # Separate uploader for pollutant data
         pollutant_file = st.file_uploader("Upload your PM2.5 CSV file:", type=["csv"], key="pollutant")
         if pollutant_file:
