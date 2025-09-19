@@ -192,7 +192,7 @@ else :
         df['year'].astype(str) + '-' + df['month'].astype(str).astype(str)
     )
     # ================= POLLUTANTS =================
-    elif parameter == "Pollutants 💨":
+    if parameter == "Pollutants 💨":
         # Build the data cube (time × lat × lon)
         def build_data_cube(df):
             lat_vals = sorted(df['lat'].unique())
