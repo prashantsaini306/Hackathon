@@ -13,7 +13,7 @@ parameter = st.selectbox(
 )
 
 # ---- File Upload ----
-uploaded_file = st.file_uploader("Upload your CSV (Data1.csv)", type=["csv"])
+uploaded_file = st.file_uploader("Please upload your dataset with one of the above parameter it contains", type=["csv"])
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
 
