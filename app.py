@@ -68,7 +68,7 @@ if uploaded_file:
         ax.set_title(f"Temperature directional vectors on {sel_date}")
         st.pyplot(fig)
 
-# Flow info
+       # Flow info
         mean_dx = np.nanmean(dT_dlon)
         mean_dy = np.nanmean(dT_dlat)
         direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
