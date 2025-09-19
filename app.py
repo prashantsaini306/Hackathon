@@ -208,7 +208,7 @@ if uploaded_file:
                 # ================= POLLUTANTS =================
     elif parameter == "Pollutants 💨":
         # Expect columns: lat, lon, YYYY-MM, YYYY-MM, ...
-        if {"lat", "lon"}.issubset(df.columns):
+       if {"lat", "lon"}.issubset(df.columns):
             lat_vals = sorted(df['lat'].unique())
             lon_vals = sorted(df['lon'].unique())
 
@@ -272,5 +272,5 @@ if uploaded_file:
 
             st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
             st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
-        else:
+      else:
             st.error("CSV must have 'lat' and 'lon' columns for Pollutants 💨 dataset.")
