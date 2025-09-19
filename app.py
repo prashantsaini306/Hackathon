@@ -195,9 +195,6 @@ if uploaded_file:
 
     elif parameter == "Pollutants 💨":
 
-        # Expect columns: lat, lon, YYYY-MM ...
-            st.write("Preview of uploaded PM2.5 data:", df_pm.head())
-
         # --- Extract available year-month columns from headers ---
             year_month_cols = df_pm.columns[2:]
 
