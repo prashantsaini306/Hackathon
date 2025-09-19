@@ -193,7 +193,7 @@ if uploaded_file:
         st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
 
 
-    elif parameter == "Pollutants 💨":
+     elif parameter == "Pollutants 💨":
 
         # app.py
             import streamlit as st
@@ -205,72 +205,71 @@ if uploaded_file:
             # 1. Load CSV and build cube
             # ----------------------------
             @st.cache_data
-                # ================= POLLUTANTS =================
-    elif parameter == "Pollutants 💨":
-        # Expect columns: lat, lon, YYYY-MM, YYYY-MM, ...
-       if {"lat", "lon"}.issubset(df.columns):
-            lat_vals = sorted(df['lat'].unique())
-            lon_vals = sorted(df['lon'].unique())
-
-            # Columns are months (e.g. "1981-01", "1981-02", ...)
-            time_cols = df.columns[2:]
-            time_vals = pd.to_datetime(time_cols, format="%Y-%m")
-
-            ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
-            data_cube = np.full((ntime, nlat, nlon), np.nan)
-
-            lat_index = {lat: i for i, lat in enumerate(lat_vals)}
-            lon_index = {lon: j for j, lon in enumerate(lon_vals)}
-
-            # Fill cube
-            for _, row in df.iterrows():
-                i = lat_index[row['lat']]
-                j = lon_index[row['lon']]
-                data_cube[:, i, j] = row.values[2:]
-
-            # Dropdown for month selection
-            time_choice = st.selectbox("Select month:", time_vals.strftime("%Y-%m"))
-            t_index = np.where(time_vals.strftime("%Y-%m") == time_choice)[0][0]
-
-            # Extract 2D field
-            field = data_cube[t_index, :, :]
-            lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals, indexing="xy")
-
-            # Compute gradients
-            dP_dlat, dP_dlon = np.gradient(field, lat_vals, lon_vals)
-
-            # Normalize (unit vectors)
-            mag = np.sqrt(dP_dlon**2 + dP_dlat**2)
-            mag[mag == 0] = 1.0
-            u = dP_dlon / mag
-            v = dP_dlat / mag
-
-            # Scale arrows
-            dx = np.median(np.diff(lon_vals))
-            dy = np.median(np.diff(lat_vals))
-            arrow_len = 0.5 * min(dx, dy)
-            u *= arrow_len
-            v *= arrow_len
-
-            # Plot
-            fig, ax = plt.subplots(figsize=(8,6))
-            pcm = ax.pcolormesh(lon_2d, lat_2d, field, shading="auto", cmap="coolwarm")
-            fig.colorbar(pcm, ax=ax, label="PMI")
-
-            ax.quiver(lon_2d, lat_2d, u, v, scale=1, color="black", width=0.002)
-
-            ax.set_xlabel("Longitude")
-            ax.set_ylabel("Latitude")
-            ax.set_title(f"PMI Gradient Directions on {time_vals[t_index].strftime('%Y-%m')}", fontsize=12)
-            st.pyplot(fig)
-
-            # Flow info summary
-            mean_dx = np.nanmean(dP_dlon)
-            mean_dy = np.nanmean(dP_dlat)
-            direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
-            mean_magnitude = np.nanmean(np.sqrt(dP_dlon**2 + dP_dlat**2))
-
-            st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
-            st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
-      else:
-            st.error("CSV must have 'lat' and 'lon' columns for Pollutants 💨 dataset.")
+                # ================= POLLUTANTS ===============
+            # Expect columns: lat, lon, YYYY-MM, YYYY-MM, ...
+           if {"lat", "lon"}.issubset(df.columns):
+                lat_vals = sorted(df['lat'].unique())
+                lon_vals = sorted(df['lon'].unique())
+    
+                # Columns are months (e.g. "1981-01", "1981-02", ...)
+                time_cols = df.columns[2:]
+                time_vals = pd.to_datetime(time_cols, format="%Y-%m")
+    
+                ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
+                data_cube = np.full((ntime, nlat, nlon), np.nan)
+    
+                lat_index = {lat: i for i, lat in enumerate(lat_vals)}
+                lon_index = {lon: j for j, lon in enumerate(lon_vals)}
+    
+                # Fill cube
+                for _, row in df.iterrows():
+                    i = lat_index[row['lat']]
+                    j = lon_index[row['lon']]
+                    data_cube[:, i, j] = row.values[2:]
+    
+                # Dropdown for month selection
+                time_choice = st.selectbox("Select month:", time_vals.strftime("%Y-%m"))
+                t_index = np.where(time_vals.strftime("%Y-%m") == time_choice)[0][0]
+    
+                # Extract 2D field
+                field = data_cube[t_index, :, :]
+                lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals, indexing="xy")
+    
+                # Compute gradients
+                dP_dlat, dP_dlon = np.gradient(field, lat_vals, lon_vals)
+    
+                # Normalize (unit vectors)
+                mag = np.sqrt(dP_dlon**2 + dP_dlat**2)
+                mag[mag == 0] = 1.0
+                u = dP_dlon / mag
+                v = dP_dlat / mag
+    
+                # Scale arrows
+                dx = np.median(np.diff(lon_vals))
+                dy = np.median(np.diff(lat_vals))
+                arrow_len = 0.5 * min(dx, dy)
+                u *= arrow_len
+                v *= arrow_len
+    
+                # Plot
+                fig, ax = plt.subplots(figsize=(8,6))
+                pcm = ax.pcolormesh(lon_2d, lat_2d, field, shading="auto", cmap="coolwarm")
+                fig.colorbar(pcm, ax=ax, label="PMI")
+    
+                ax.quiver(lon_2d, lat_2d, u, v, scale=1, color="black", width=0.002)
+    
+                ax.set_xlabel("Longitude")
+                ax.set_ylabel("Latitude")
+                ax.set_title(f"PMI Gradient Directions on {time_vals[t_index].strftime('%Y-%m')}", fontsize=12)
+                st.pyplot(fig)
+    
+                # Flow info summary
+                mean_dx = np.nanmean(dP_dlon)
+                mean_dy = np.nanmean(dP_dlat)
+                direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
+                mean_magnitude = np.nanmean(np.sqrt(dP_dlon**2 + dP_dlat**2))
+    
+                st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
+                st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
+          else:
+                st.error("CSV must have 'lat' and 'lon' columns for Pollutants 💨 dataset.")
