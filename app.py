@@ -12,16 +12,10 @@ parameter = st.selectbox(
     ["Temperature", "Rainfall", "Wind Speed", "Pollutants"]
 )
 
-# Replace with your real file ID
-url = "https://drive.google.com/uc?id=1ABcDefGhijkLmnoPqrStUvWxYz"
-
-@st.cache_data
-def load_data():
-    return pd.read_csv(url)
-
-df = load_data()
-
-st.write("### Data Preview", df.head())
+# ---- File Upload ----
+uploaded_file = st.file_uploader("Upload your CSV (Data1.csv)", type=["csv"])
+if uploaded_file:
+    df = pd.read_csv(uploaded_file)
 
     # --- build datetime ---
     df = df.rename(columns={'Year':'year', 'Month':'month', 'Date':'day'})
