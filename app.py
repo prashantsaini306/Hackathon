@@ -196,17 +196,17 @@ if uploaded_file:
     elif parameter == "Pollutants 💨":
 
         # --- Extract available year-month columns from headers ---
-            year_month_cols = df_pm.columns[2:]
+            year_month_cols = df.columns[2:]
 
         # --- Dropdown menu for selecting a date ---
             sel_date = st.selectbox("Select Year-Month", year_month_cols)
             st.write(f"You selected: **{sel_date}**")
 
         # --- Build data cube (time × lat × lon) ---
-            def build_pm25_cube(df_pm):
-                lat_vals = sorted(df_pm['lat'].unique())
-                lon_vals = sorted(df_pm['lon'].unique())
-                time_vals = pd.to_datetime(df_pm.columns[2:], format="%Y-%m")
+            def build_pm25_cube(df):
+                lat_vals = sorted(df['lat'].unique())
+                lon_vals = sorted(df['lon'].unique())
+                time_vals = pd.to_datetime(df.columns[2:], format="%Y-%m")
 
                 ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
                 cube = np.full((ntime, nlat, nlon), np.nan)
@@ -214,14 +214,14 @@ if uploaded_file:
                 lat_index = {lat: i for i, lat in enumerate(lat_vals)}
                 lon_index = {lon: j for j, lon in enumerate(lon_vals)}
 
-                for _, row in df_pm.iterrows():
+                for _, row in df.iterrows():
                     i = lat_index[row['lat']]
                     j = lon_index[row['lon']]
                     cube[:, i, j] = row.values[2:]
 
                 return cube, time_vals, lat_vals, lon_vals
 
-            data_cube, time_vals, lat_vals, lon_vals = build_pm25_cube(df_pm)
+            data_cube, time_vals, lat_vals, lon_vals = build_pm25_cube(df)
 
         # --- Find index for selected date ---
             t_index = [i for i, t in enumerate(time_vals) if t.strftime("%Y-%m") == sel_date][0]
