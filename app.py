@@ -195,64 +195,98 @@ if uploaded_file:
 
     elif parameter == "Pollutants 💨":
 
-        # --- Extract available year-month columns from headers ---
-            year_month_cols = df.columns[2:]
+       # streamlit_app.py
+        import streamlit as st
+        import numpy as np
+        import pandas as pd
+        import matplotlib.pyplot as plt
+        import cartopy.crs as ccrs
+        import cartopy.feature as cfeature
 
-        # --- Dropdown menu for selecting a date ---
-            sel_date = st.selectbox("Select Year-Month", year_month_cols)
-            st.write(f"You selected: **{sel_date}**")
+        # ----------------------------
+        # 1. Load your CSV and build cube
+        # ----------------------------
+        @st.cache_data
+        def load_cube(csv_path):
+            df = pd.read_csv(csv_path)
 
-        # --- Build data cube (time × lat × lon) ---
-            def build_pm25_cube(df):
-                lat_vals = sorted(df['lat'].unique())
-                lon_vals = sorted(df['lon'].unique())
-                time_vals = pd.to_datetime(df.columns[2:], format="%Y-%m")
+            # --- Build data cube ---
+            lat_vals = sorted(df['lat'].unique())
+            lon_vals = sorted(df['lon'].unique())
+            time_vals = pd.to_datetime(df.columns[2:], format="%Y-%m")  # adapt if needed
+        
+            ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
+            data_cube = np.full((ntime, nlat, nlon), np.nan)
+        
+            lat_index = {lat: i for i, lat in enumerate(lat_vals)}
+            lon_index = {lon: j for j, lon in enumerate(lon_vals)}
+        
+            for _, row in df.iterrows():
+                i = lat_index[row['lat']]
+                j = lon_index[row['lon']]
+                data_cube[:, i, j] = row.values[2:]
 
-                ntime, nlat, nlon = len(time_vals), len(lat_vals), len(lon_vals)
-                cube = np.full((ntime, nlat, nlon), np.nan)
+            return data_cube, time_vals, lat_vals, lon_vals
 
-                lat_index = {lat: i for i, lat in enumerate(lat_vals)}
-                lon_index = {lon: j for j, lon in enumerate(lon_vals)}
-
-                for _, row in df.iterrows():
-                    i = lat_index[row['lat']]
-                    j = lon_index[row['lon']]
-                    cube[:, i, j] = row.values[2:]
-
-                return cube, time_vals, lat_vals, lon_vals
-
-            data_cube, time_vals, lat_vals, lon_vals = build_pm25_cube(df)
-
-        # --- Find index for selected date ---
-            t_index = [i for i, t in enumerate(time_vals) if t.strftime("%Y-%m") == sel_date][0]
-
-            pm_field = data_cube[t_index, :, :]
+        # ----------------------------
+        # 2. Gradient plotting function
+        # ----------------------------
+        def plot_pmi_gradient(data_cube, time_vals, lat_vals, lon_vals, t_index,
+                              extent=[72,82,28,38], cmap="coolwarm"):
+            field = data_cube[t_index, :, :]
             lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals, indexing="xy")
-
-        # --- Compute gradients ---
-            dP_dlat, dP_dlon = np.gradient(pm_field, lat_vals, lon_vals)
-
-            # Quiver needs (U=dx, V=dy) in same orientation
-            U = dP_dlon.T
-            V = dP_dlat.T
-
-
-        # --- Plot PM2.5 heatmap with directional vectors ---
-            fig, ax = plt.subplots(figsize=(8,6))
-            pcm = ax.pcolormesh(lon_2d, lat_2d, pm_field, shading='auto', cmap='coolwarm')
-            fig.colorbar(pcm, ax=ax, label='PM2.5 (µg/m³)')
-            ax.quiver(lon_2d, lat_2d, U, V, color="black", scale=1)
-            ax.set_xlabel("Longitude")
-            ax.set_ylabel("Latitude")
-            ax.set_title(f"PM2.5 directional vectors on {sel_date}")
+        
+            # Gradients
+            dT_dlat, dT_dlon = np.gradient(field, lat_vals, lon_vals)
+        
+            # Normalize to unit length
+            mag = np.sqrt(dT_dlon**2 + dT_dlat**2)
+            mag[mag == 0] = 1.0
+            u = dT_dlon / mag
+            v = dT_dlat / mag
+        
+            # Rescale to visible arrows
+            dx = np.median(np.diff(lon_vals))
+            dy = np.median(np.diff(lat_vals))
+            arrow_len = 0.5 * min(dx, dy)
+            u *= arrow_len
+            v *= arrow_len
+        
+            # Plot
+            proj = ccrs.PlateCarree()
+            fig, ax = plt.subplots(figsize=(8,6), subplot_kw={'projection': proj})
+        
+            ax.coastlines(resolution="10m", linewidth=1)
+            ax.add_feature(cfeature.BORDERS, linestyle=":", linewidth=0.8)
+            ax.add_feature(cfeature.LAND, facecolor="lightgray", alpha=0.5)
+        
+            pcm = ax.pcolormesh(lon_2d, lat_2d, field,
+                                transform=ccrs.PlateCarree(),
+                                shading='auto', cmap=cmap)
+            plt.colorbar(pcm, ax=ax, label="PMI")
+        
+            ax.quiver(lon_2d, lat_2d, u, v,
+                      transform=ccrs.PlateCarree(),
+                      scale=1, color="black", width=0.002)
+        
+            ax.set_extent(extent, crs=ccrs.PlateCarree())
+            ax.set_title(f"PMI Gradient Directions on {time_vals[t_index].strftime('%Y-%m')}", fontsize=12)
             st.pyplot(fig)
-
-            # --- Flow info ---
-            mean_dx = np.nanmean(dP_dlon)
-            mean_dy = np.nanmean(dP_dlat)
-            direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
-            mean_magnitude = np.nanmean(np.sqrt(dP_dlon**2 + dP_dlat**2))
-    
-            st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
-            st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
+        
+        # ----------------------------
+        # 3. Streamlit UI
+        # ----------------------------
+        st.title("PMI Gradient Vector Viewer")
+        
+        # Upload CSV
+        csv_file = st.file_uploader("Upload PMI CSV file", type=["csv"])
+        if csv_file:
+            data_cube, time_vals, lat_vals, lon_vals = load_cube(csv_file)
+        
+            # Dropdown for time selection
+            time_choice = st.selectbox("Select month:", time_vals.strftime("%Y-%m"))
+            t_index = np.where(time_vals.strftime("%Y-%m") == time_choice)[0][0]
+        
+            # Plot
+            plot_pmi_gradient(data_cube, time_vals, lat_vals, lon_vals, t_index)
 
