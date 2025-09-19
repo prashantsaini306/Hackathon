@@ -12,12 +12,6 @@ parameter = st.selectbox(
     ["Temperature 🌡️", "Rainfall 🌧️", "Wind Speed 🌬️", "Pollutants 💨"]
 )
 
-st.slider("Select date range", min_value=df["datetime"].min(), 
-          max_value=df["datetime"].max(), value=(df["datetime"].min(), df["datetime"].max()))
-
-lat_range = st.slider("Latitude Range", float(df["lat"].min()), float(df["lat"].max()), (20.0, 30.0))
-lon_range = st.slider("Longitude Range", float(df["lon"].min()), float(df["lon"].max()), (70.0, 80.0))
-
 
 # ---- File Upload ----
 uploaded_file = st.file_uploader("Please upload your dataset with one of the above parameter it contains :", type=["csv"])
