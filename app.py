@@ -26,7 +26,6 @@ if uploaded_file:
 
     # ================= TEMPERATURE =================
     if parameter == "Temperature":
-        import re
         # --- Extract T2M_<lat>_<lon> columns ---
         t2m_columns = [c for c in df.columns if re.match(r"WS10M_\d+_\d+$", c)]
 
