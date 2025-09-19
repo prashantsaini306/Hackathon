@@ -264,3 +264,4 @@ if uploaded_file:
             
                 st.pyplot(fig)
                 
+                plot_pmi_gradient(data_cube, time_vals, lat_vals, lon_vals, t_index)
