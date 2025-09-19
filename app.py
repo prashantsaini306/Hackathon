@@ -232,11 +232,23 @@ if uploaded_file:
         # --- Compute gradients ---
             dP_dlat, dP_dlon = np.gradient(pm_field, lat_vals, lon_vals)
 
+            # Diagnostics
+            st.write(
+                "PM2.5 field min/max:", np.nanmin(pm_field), np.nanmax(pm_field),
+                " | Gradient min/max:", np.nanmin(dP_dlat), np.nanmax(dP_dlat),
+                np.nanmin(dP_dlon), np.nanmax(dP_dlon)
+            )
+
         # --- Plot PM2.5 heatmap with directional vectors ---
             fig, ax = plt.subplots(figsize=(8,6))
             pcm = ax.pcolormesh(lon_2d, lat_2d, pm_field, shading='auto', cmap='coolwarm')
             fig.colorbar(pcm, ax=ax, label='PM2.5 (µg/m³)')
-            ax.quiver(lon_2d, lat_2d, dP_dlon, dP_dlat, color='black', scale=50)
+            # Skip every 2 points for visibility
+            skip = (slice(None, None, 2), slice(None, None, 2))
+            ax.quiver(
+                lon_2d[skip], lat_2d[skip], dP_dlon[skip], dP_dlat[skip],
+                color='black', angles='xy', scale_units='xy', scale=1
+            )
             ax.set_xlabel("Longitude")
             ax.set_ylabel("Latitude")
             ax.set_title(f"PM2.5 directional vectors on {sel_date}")
