@@ -236,7 +236,7 @@ if uploaded_file:
             fig, ax = plt.subplots(figsize=(8,6))
             pcm = ax.pcolormesh(lon_2d, lat_2d, pm_field, shading='auto', cmap='coolwarm')
             fig.colorbar(pcm, ax=ax, label='PM2.5 (µg/m³)')
-            ax.quiver(lon_2d, lat_2d, dP_dlon, dP_dlat, color='black', scale=5)
+            ax.quiver(lon_2d, lat_2d, dP_dlon, dP_dlat, color='black', scale=50)
             ax.set_xlabel("Longitude")
             ax.set_ylabel("Latitude")
             ax.set_title(f"PM2.5 directional vectors on {sel_date}")
