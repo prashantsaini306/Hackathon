@@ -4,9 +4,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import re
 
-# =============== LOAD DATA =================
-st.title("Waether Gradient Viewer")
+# =============== TITLE =================
+st.title("Weather Gradient Viewer")
 
+# ---- Dropdown menu ----
+parameter = st.selectbox(
+    "Select a parameter to analyze:",
+    ["Temperature", "Rainfall", "Wind Speed", "Pollutants"]
+)
+
+# ---- File Upload ----
 uploaded_file = st.file_uploader("Upload your CSV (Data1.csv)", type=["csv"])
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
@@ -17,55 +24,65 @@ if uploaded_file:
         df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str)
     )
 
-    # --- Extract T2M_<lat>_<lon> columns ---
-    t2m_columns = [c for c in df.columns if re.match(r"T2M_\d+_\d+$", c)]
+    if parameter == "Temperature":
+        # --- Extract T2M_<lat>_<lon> columns ---
+        t2m_columns = [c for c in df.columns if re.match(r"T2M_\d+_\d+$", c)]
 
-    lat_vals = sorted({int(c.split("_")[1])/100 if len(c.split("_")[1]) > 2 else int(c.split("_")[1])
-                       for c in t2m_columns})
-    lon_vals = sorted({int(c.split("_")[2])/100 if len(c.split("_")[2]) > 2 else int(c.split("_")[2])
-                       for c in t2m_columns})
+        lat_vals = sorted({int(c.split("_")[1])/100 if len(c.split("_")[1]) > 2 else int(c.split("_")[1])
+                           for c in t2m_columns})
+        lon_vals = sorted({int(c.split("_")[2])/100 if len(c.split("_")[2]) > 2 else int(c.split("_")[2])
+                           for c in t2m_columns})
 
-    ntime = len(df)
-    nlat, nlon = len(lat_vals), len(lon_vals)
-    data_cube = np.full((ntime, nlat, nlon), np.nan)
+        ntime = len(df)
+        nlat, nlon = len(lat_vals), len(lon_vals)
+        data_cube = np.full((ntime, nlat, nlon), np.nan)
 
-    # Fill cube
-    for c in t2m_columns:
-        lat_raw, lon_raw = c.split("_")[1:]
-        lat_val = float(lat_raw)/100 if len(lat_raw) > 2 else float(lat_raw)
-        lon_val = float(lon_raw)/100 if len(lon_raw) > 2 else float(lon_raw)
-        i = lat_vals.index(lat_val)
-        j = lon_vals.index(lon_val)
-        data_cube[:, i, j] = df[c].values
+        # Fill cube
+        for c in t2m_columns:
+            lat_raw, lon_raw = c.split("_")[1:]
+            lat_val = float(lat_raw)/100 if len(lat_raw) > 2 else float(lat_raw)
+            lon_val = float(lon_raw)/100 if len(lon_raw) > 2 else float(lon_raw)
+            i = lat_vals.index(lat_val)
+            j = lon_vals.index(lon_val)
+            data_cube[:, i, j] = df[c].values
 
-    # =============== INTERACT =================
-    # Date selector
-    sel_date = st.selectbox("Select a date", df["datetime"].dt.strftime("%Y-%m-%d").unique())
+        # =============== INTERACT =================
+        # Date selector
+        sel_date = st.selectbox("Select a date", df["datetime"].dt.strftime("%Y-%m-%d").unique())
 
-    # Get 2D slice for chosen date
-    t_idx = df.index[df["datetime"] == sel_date][0]
-    temp_2d = data_cube[t_idx, :, :]
+        # Get 2D slice for chosen date
+        t_idx = df.index[df["datetime"] == sel_date][0]
+        temp_2d = data_cube[t_idx, :, :]
 
-    lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals)
+        lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals)
 
-    # Compute gradient
-    dT_dlat, dT_dlon = np.gradient(temp_2d, lat_vals, lon_vals)
+        # Compute gradient
+        dT_dlat, dT_dlon = np.gradient(temp_2d, lat_vals, lon_vals)
 
-    # =============== PLOT =================
-    fig, ax = plt.subplots(figsize=(8,6))
-    pcm = ax.pcolormesh(lon_2d, lat_2d, temp_2d, shading='auto', cmap='coolwarm')
-    fig.colorbar(pcm, ax=ax, label='Temperature (°C)')
-    ax.quiver(lon_2d, lat_2d, dT_dlon, dT_dlat, scale=50, color='black')
-    ax.set_xlabel("Longitude")
-    ax.set_ylabel("Latitude")
-    ax.set_title(f"Temperature directional vectors on {sel_date}")
-    st.pyplot(fig)
+        # =============== PLOT =================
+        fig, ax = plt.subplots(figsize=(8,6))
+        pcm = ax.pcolormesh(lon_2d, lat_2d, temp_2d, shading='auto', cmap='coolwarm')
+        fig.colorbar(pcm, ax=ax, label='Temperature (°C)')
+        ax.quiver(lon_2d, lat_2d, dT_dlon, dT_dlat, scale=50, color='black')
+        ax.set_xlabel("Longitude")
+        ax.set_ylabel("Latitude")
+        ax.set_title(f"Temperature directional vectors on {sel_date}")
+        st.pyplot(fig)
 
-    # Show average flow info
-    mean_dx = np.nanmean(dT_dlon)
-    mean_dy = np.nanmean(dT_dlat)
-    direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
-    mean_magnitude = np.nanmean(np.sqrt(dT_dlon**2 + dT_dlat**2))
+        # Show average flow info
+        mean_dx = np.nanmean(dT_dlon)
+        mean_dy = np.nanmean(dT_dlat)
+        direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
+        mean_magnitude = np.nanmean(np.sqrt(dT_dlon**2 + dT_dlat**2))
 
-    st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
-    st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
+        st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
+        st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
+
+    elif parameter == "Rainfall":
+        st.info("Rainfall visualization will appear here (to be implemented).")
+
+    elif parameter == "Wind Speed":
+        st.info("Wind speed visualization will appear here (to be implemented).")
+
+    elif parameter == "Pollutants":
+        st.info("Pollutant data visualization will appear here (to be implemented).")
