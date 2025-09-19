@@ -1,38 +1,71 @@
 import streamlit as st
+import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+import re
 
+# =============== LOAD DATA =================
+st.title("Temperature Gradient Viewer")
 
-st.title("Weather Vectors: From Scalars to Directional Insights")
-st.write("Upload a CSV of gridded temperature data to compute and visualize directional vectors.")
-
-uploaded_file = st.file_uploader("Upload temperature CSV", type=["csv"])
-
+uploaded_file = st.file_uploader("Upload your CSV (Data1.csv)", type=["csv"])
 if uploaded_file:
-    import pandas as pd
     df = pd.read_csv(uploaded_file)
 
-    grid = df.pivot(index='Lat', columns='Lon', values='Temp').sort_index(ascending=False)
-    lat_vals = grid.index.values
-    lon_vals = grid.columns.values
-    temp_2d = grid.values
+    # --- build datetime ---
+    df = df.rename(columns={'Year':'year', 'Month':'month', 'Date':'day'})
+    df["datetime"] = pd.to_datetime(
+        df['year'].astype(str) + '-' + df['month'].astype(str) + '-' + df['day'].astype(str)
+    )
 
-    dT_dlat, dT_dlon = np.gradient(temp_2d)
+    # --- Extract T2M_<lat>_<lon> columns ---
+    t2m_columns = [c for c in df.columns if re.match(r"T2M_\d+_\d+$", c)]
 
+    lat_vals = sorted({int(c.split("_")[1])/100 if len(c.split("_")[1]) > 2 else int(c.split("_")[1])
+                       for c in t2m_columns})
+    lon_vals = sorted({int(c.split("_")[2])/100 if len(c.split("_")[2]) > 2 else int(c.split("_")[2])
+                       for c in t2m_columns})
+
+    ntime = len(df)
+    nlat, nlon = len(lat_vals), len(lon_vals)
+    data_cube = np.full((ntime, nlat, nlon), np.nan)
+
+    # Fill cube
+    for c in t2m_columns:
+        lat_raw, lon_raw = c.split("_")[1:]
+        lat_val = float(lat_raw)/100 if len(lat_raw) > 2 else float(lat_raw)
+        lon_val = float(lon_raw)/100 if len(lon_raw) > 2 else float(lon_raw)
+        i = lat_vals.index(lat_val)
+        j = lon_vals.index(lon_val)
+        data_cube[:, i, j] = df[c].values
+
+    # =============== INTERACT =================
+    # Date selector
+    sel_date = st.selectbox("Select a date", df["datetime"].dt.strftime("%Y-%m-%d").unique())
+
+    # Get 2D slice for chosen date
+    t_idx = df.index[df["datetime"] == sel_date][0]
+    temp_2d = data_cube[t_idx, :, :]
+
+    lon_2d, lat_2d = np.meshgrid(lon_vals, lat_vals)
+
+    # Compute gradient
+    dT_dlat, dT_dlon = np.gradient(temp_2d, lat_vals, lon_vals)
+
+    # =============== PLOT =================
     fig, ax = plt.subplots(figsize=(8,6))
-    c = ax.pcolormesh(lon_vals, lat_vals, temp_2d, shading='auto', cmap='coolwarm')
-    fig.colorbar(c, ax=ax, label='Temperature (°C)')
-    ax.quiver(lon_vals, lat_vals, dT_dlon, dT_dlat, color='black', scale=50)
-    ax.set_xlabel('Longitude')
-    ax.set_ylabel('Latitude')
-    ax.set_title('Temperature Directional Vectors')
+    pcm = ax.pcolormesh(lon_2d, lat_2d, temp_2d, shading='auto', cmap='coolwarm')
+    fig.colorbar(pcm, ax=ax, label='Temperature (°C)')
+    ax.quiver(lon_2d, lat_2d, dT_dlon, dT_dlat, scale=50, color='black')
+    ax.set_xlabel("Longitude")
+    ax.set_ylabel("Latitude")
+    ax.set_title(f"Temperature directional vectors on {sel_date}")
     st.pyplot(fig)
 
+    # Show average flow info
     mean_dx = np.nanmean(dT_dlon)
     mean_dy = np.nanmean(dT_dlat)
     direction_deg = np.degrees(np.arctan2(mean_dy, mean_dx))
-    magnitude = np.sqrt(mean_dx**2 + mean_dy**2)
-    st.write(f"**Average flow direction:** {direction_deg:.1f}°")
-    st.write(f"**Average flow magnitude:** {magnitude:.3f}")
-else:
-    st.info("Upload a CSV with columns: `Lat`, `Lon`, `Temp`.")
+    mean_magnitude = np.nanmean(np.sqrt(dT_dlon**2 + dT_dlat**2))
+
+    st.write(f"**Dominant flow direction:** {direction_deg:.1f}°")
+    st.write(f"**Average flow magnitude:** {mean_magnitude:.2f}")
